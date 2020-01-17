@@ -22,16 +22,13 @@ RSpec.describe 'Task', type: :system do
         task = FactoryBot.create(:task, project_id: project.id)
         visit project_path(project)
         click_link 'View Todos'
-        sleep 1
-        #visit project_tasks_path(project)
-        within '.task_list' do
-          expect(page).to have_content(task.title)
-        end
-        #expect(page).to have_css('.task_list', text: task.title)
-        #page.driver.browser.switch_to
-        #expect(page).to have_selector '#.task_list', text: /^task.title$/
+        within_window(windows.last) do
+          within '.task_list' do
+            expect(page).to have_content(task.title)
+          end
         expect(Task.count).to eq 1
         expect(current_path).to eq project_tasks_path(project)
+        end
       end
     end
   end
@@ -117,7 +114,9 @@ RSpec.describe 'Task', type: :system do
         click_link 'Destroy'
         page.driver.browser.switch_to.alert.accept
         expect(page).to have_content "Task was successfully destroyed."
-        expect(page).not_to have_css('.task_list'), task.title
+        within '.task_list' do
+          expect(page).not_to have_content(task.title)
+        end
         expect(Task.count).to eq 0
         expect(current_path).to eq project_tasks_path(project)
       end
