@@ -1,9 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe 'Task', type: :system do
-  let(:project) { FactoryBot.create(:project) }
-  let(:task) { FactoryBot.create(:task, project_id: project.id) }
-  include ApplicationHelper
+  let(:project) { create(:project) }
+  let(:task) { create(:task, project_id: project.id) }
   describe 'Task一覧' do
     context '正常系' do
       it '一覧ページにアクセスした場合、Taskが表示されること' do
@@ -18,17 +17,14 @@ RSpec.describe 'Task', type: :system do
 
       it 'Project詳細からTask一覧ページにアクセスした場合、Taskが表示されること' do
         # FIXME: テストが失敗するので修正してください
-        project = FactoryBot.create(:project)
-        task = FactoryBot.create(:task, project_id: project.id)
+        project = create(:project)
+        task = create(:task, project_id: project.id)
         visit project_path(project)
         click_link 'View Todos'
-        within_window(windows.last) do
-          within '.task_list' do
-            expect(page).to have_content(task.title)
-          end
+        switch_to_window(windows.last)
+        expect(find('.task_list')).to have_content(task.title)
         expect(Task.count).to eq 1
         expect(current_path).to eq project_tasks_path(project)
-        end
       end
     end
   end
@@ -91,9 +87,9 @@ RSpec.describe 'Task', type: :system do
       end
 
       it '既にステータスが完了のタスクのステータスを変更した場合、Taskの完了日が更新されないこと' do
-        # TODO: FactoryBotのtraitを利用してください
+        # TODO: Botのtraitを利用してください
         project
-        task = FactoryBot.create(:task, :modify, project_id: project.id)
+        task = create(:task, :modify, project_id: project.id)
         visit edit_project_task_path(project, task)
         select 'todo', from: 'Status'
         click_button 'Update Task'
@@ -109,14 +105,12 @@ RSpec.describe 'Task', type: :system do
       # FIXME: テストが失敗するので修正してください
       it 'Taskが削除されること' do
         project
-        task = FactoryBot.create(:task, project_id: project.id)
+        task = create(:task, project_id: project.id)
         visit project_tasks_path(project)
         click_link 'Destroy'
         page.driver.browser.switch_to.alert.accept
         expect(page).to have_content "Task was successfully destroyed."
-        within '.task_list' do
-          expect(page).not_to have_content(task.title)
-        end
+        expect(find('.task_list')).not_to have_content(task.title)
         expect(Task.count).to eq 0
         expect(current_path).to eq project_tasks_path(project)
       end
